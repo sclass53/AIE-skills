@@ -3,3 +3,4 @@ Pillow>=10.0.0
 numpy>=1.24.0
 exifread>=3.0.0
 imageio>=2.31.0
+opencv-python>=4.8.0
