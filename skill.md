@@ -29,7 +29,7 @@ pip install -r requirements.txt
 | `tyndall`   | 丁达尔光（体积光/耶稣光）：从光源位置放射光束，增强光线氛围感 |
 | `crop`      | 按归一化坐标裁剪图像（构图裁切） |
 | `grade`     | 颜色偏移/分级：青橙、冷灰、暖调、冷调、黑白等预设 |
-| `list-presets` | 列出所有可用颜色分级预设（含 style.md 中自定义预设） |
+| `list-presets` | 列出所有颜色分级预设及其适用场景（含 style.md 中自定义预设） |
 
 ## 使用示例
 
@@ -127,12 +127,16 @@ python retouch.py crop photo.jpg -o cropped.jpg \
 ```bash
 python retouch.py grade photo.dng -o graded.jpg --preset teal-orange --strength 0.8
 ```
-预设值请运行 `list-presets` 查看（内置 `teal-orange`, `cold-gray`, `warm`, `cool`, `noir`，以及 style.md 中的自定义预设）。
+**选择预设前必须先做场景匹配**：运行 `list-presets`，每个预设都带有 `scene` 适用场景描述。先看图判断当前画面内容（建筑？人像？风景？），再选 `scene` 与之匹配的预设。
+- 典型错误：给**人像特写**套 `teal-orange`（青橙）或 `cold-gray`（冷灰）——橙高光会让肤色发脏、青阴影+低饱和会让皮肤发灰发青显病态。这类影调是为**建筑、城市街景、夜景**设计的。
+- 人像优先考虑 `warm`、`golden-hour`；情绪感黑白用 `noir`（需用户想要黑白）。
+- 拿不准时用 `--strength 0.5~0.6` 保守尝试，并让用户确认。
 
 ### 列出所有颜色分级预设
 ```bash
 python retouch.py list-presets
 ```
+输出包含每个预设的 `scene` 适用场景描述，选预设前务必阅读并与当前画面内容对照。
 
 ### 自定义预设
 颜色分级预设存储在 `style.md` 中（JSON 格式）。用户可以直接编辑该文件，添加新的预设条目，即可在 `grade` 命令中使用 `--preset 名称` 调用。例如添加：
@@ -142,9 +146,12 @@ python retouch.py list-presets
     "shadow_rgb": [0.03, -0.01, -0.03],
     "highlight_rgb": [0.05, 0.02, -0.05],
     "strength_default": 0.6,
-    "pre_saturation": -15
+    "pre_saturation": -15,
+    "scene": "适用场景描述（必填）：说明该预设适合什么画面内容、不适合什么。例如人像慎用/建筑适用等"
 }
 ```
+
+`scene` 字段用自然语言描述适用场景，会在 `list-presets` 时显示，帮助选择时避开不匹配的画面内容（如给人像用了建筑调）。
 
 保存后即可运行：
 
@@ -188,7 +195,7 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
    按【场景分支】中的构图思路检查画面，用 `crop` 裁掉干扰物、修正构图。
 
 7. **应用颜色分级**  
-   使用 `list-presets` 查看可用预设，选择合适风格执行 `grade`。可通过 `--strength` 控制效果强度。  
+   使用 `list-presets` 查看可用预设，**先阅读每个预设的 `scene` 场景描述，与当前画面内容匹配后才可选用**（如青橙/冷灰用于建筑街景，`warm`/`golden-hour` 用于人像），然后执行 `grade`。可通过 `--strength` 控制效果强度。  
    若用户有自己的偏好，可编辑 `style.md` 添加自定义预设。
 
 8. **输出与复查（必做，见【收尾自查清单】）**  
@@ -216,6 +223,8 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
 >   - 油光（额头、鼻尖亮斑）：`local --cx .. --cy .. --radius 0.05 --highlight -20`；
 >   - 磨皮：`local --cx .. --cy .. --radius 0.15~0.3 --blur 2~5 --feather 0.6`，只圈皮肤区域，**避开眼睛、嘴唇、发丝和轮廓边缘**，否则会假；
 >   - 做完后再次放大观察脸部，确认没有塑料感或残留瑕疵。
+>
+> **4. 颜色分级选对预设：人像禁止使用建筑/城市向影调。** `teal-orange`（青橙）、`cold-gray`（冷灰）、`cinematic` 等是为建筑、街景、夜景设计的，套在人像上会让肤色发脏发橘或发灰发青。人像选 `warm`、`golden-hour` 等肤色友好预设（`list-presets` 中看 `scene` 描述确认），除非用户明确点名要某种风格。
 
 ## 场景分支：风景（必读）
 
@@ -257,7 +266,8 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
 4. 特效类操作（丁达尔光、磨皮、局部调整）宁可轻微不可过度——过度的痕迹会毁掉照片的真实感。
 5. 降噪放在磨皮和颜色分级之前；磨皮避开五官和轮廓。
 6. 多步操作时使用链式中间文件（a → b → c），便于回溯比较。
-7. 不要更改原图，修改后的结果不要覆盖原始图像。
+7. 颜色分级预设必须与画面内容匹配：先读 `list-presets` 中的 `scene` 描述再选用。风格影调（青橙、冷灰、黑金等）默认属于建筑/城市/夜景，不要默认套到人像上。
+8. 不要更改原图，修改后的结果不要覆盖原始图像。
 
 ## 输出格式
 

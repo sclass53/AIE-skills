@@ -840,8 +840,12 @@ def get_all_presets() -> dict:
 def cmd_list_presets(args):
     presets_dict = get_all_presets()
     print("可用颜色分级预设：")
-    for name in presets_dict.keys():
-        print(f"  - {name}")
+    for name, cfg in presets_dict.items():
+        scene = cfg.get('scene', '') if isinstance(cfg, dict) else ''
+        if scene:
+            print(f"  - {name}: {scene}")
+        else:
+            print(f"  - {name}（未标注适用场景，使用前需自行判断是否匹配画面内容）")
 
 def cmd_grade(args):
     img = load_image(args.input)
