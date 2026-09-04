@@ -110,6 +110,7 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
 
 1. **观察图像**  
    使用 `inspect` 命令查看图像基本信息、亮度统计和 ASCII 缩略图，快速判断曝光、构图和色彩倾向。
+   若你能观察图像，建议用眼睛再观察一下图像。
 
 2. **检查直方图**  
    使用 `histogram` 命令获取曝光数据。重点关注：  
