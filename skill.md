@@ -1,5 +1,5 @@
 ---
-name: photo-retoucher
+name: photo-edit
 description: 专业修图师技能。支持查看直方图、提取EXIF镜头信息、调整色温/高光/阴影/曝光/对比度/饱和度、裁剪、青橙/冷灰等颜色分级、观察图像，并支持RAW文件。
 ---
 
