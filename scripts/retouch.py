@@ -2,7 +2,7 @@
 """
 修图师命令行工具
 支持查看直方图、EXIF、调整色温/高光/阴影、裁剪、颜色分级、局部调整、瑕疵修复、
-降噪、丁达尔光（体积光）、观察图像，并支持 RAW。
+降噪、丁达尔光（体积光）、观察图像、用系统默认软件展示图像，并支持 RAW。
 """
 
 import argparse
@@ -10,6 +10,7 @@ import json
 import os
 import math
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -88,6 +89,25 @@ def save_image(img: np.ndarray, path: str):
         # 默认为 8-bit PNG
         data = (img * 255.0).astype(np.uint8)
         imageio.imwrite(path, data)
+
+
+def open_with_default_app(path: str) -> bool:
+    """用系统默认看图软件打开图像文件（Windows: startfile / macOS: open / Linux: xdg-open）。"""
+    path = os.path.abspath(path)
+    if not os.path.exists(path):
+        print(f"错误：文件不存在，无法打开: {path}", file=sys.stderr)
+        return False
+    try:
+        if sys.platform == 'win32':
+            os.startfile(path)  # 仅 Windows 存在
+        elif sys.platform == 'darwin':
+            subprocess.Popen(['open', path])
+        else:
+            subprocess.Popen(['xdg-open', path])
+        return True
+    except Exception as e:
+        print(f"警告：无法用系统默认程序打开 {path}: {e}", file=sys.stderr)
+        return False
 
 
 # ----------------------------------------------------------------------
@@ -862,6 +882,12 @@ def cmd_grade(args):
     save_image(graded, args.output)
     print(f"已保存颜色分级图像: {args.output}  预设: {args.preset}")
 
+
+def cmd_show(args):
+    if not open_with_default_app(args.input):
+        sys.exit(1)
+    print(f"已用系统默认程序打开: {args.input}")
+
 # ----------------------------------------------------------------------
 # 主入口
 # ----------------------------------------------------------------------
@@ -995,11 +1021,25 @@ def main():
                          help='强度 0~1')
     p_grade.set_defaults(func=cmd_grade)
 
+    # 输出类命令共享参数：保存后用系统默认看图软件打开结果
+    for p in (p_adj, p_crop, p_local, p_heal, p_den, p_tyn, p_grade):
+        p.add_argument('--show', action='store_true',
+                       help='保存后用系统默认看图软件打开输出图像')
+
     # list-presets
     p_list = subparsers.add_parser('list-presets', help='列出所有颜色分级预设')
     p_list.set_defaults(func=cmd_list_presets)
+
+    # show（用系统默认看图软件打开图像，向用户展示）
+    p_show = subparsers.add_parser('show', help='用系统默认看图软件打开图像（向用户展示）')
+    p_show.add_argument('input', help='要打开的图像路径')
+    p_show.set_defaults(func=cmd_show)
+
     args = parser.parse_args()
     args.func(args)
+    # --show：保存成功后用系统默认程序打开输出图像
+    if getattr(args, 'show', False) and getattr(args, 'output', None):
+        open_with_default_app(args.output)
 
 
 if __name__ == '__main__':

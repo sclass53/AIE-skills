@@ -30,6 +30,7 @@ pip install -r requirements.txt
 | `crop`      | 按归一化坐标裁剪图像（构图裁切） |
 | `grade`     | 颜色偏移/分级：青橙、冷灰、暖调、冷调、黑白等预设 |
 | `list-presets` | 列出所有颜色分级预设及其适用场景（含 presets.md 中自定义预设） |
+| `show`      | 用系统默认看图软件打开图像（修图完成后向用户展示成品） |
 
 ## 使用示例
 
@@ -137,6 +138,17 @@ python retouch.py list-presets
 ```
 输出包含每个预设的 `scene` 适用场景描述，选预设前务必阅读并与当前画面内容对照。
 
+### 展示图像（用系统默认软件打开）
+修图完成后向用户展示成品：
+```bash
+python retouch.py show out.jpg
+```
+所有输出类命令（adjust、crop、local、heal、denoise、tyndall、grade）都支持 `--show`，保存成功后自动用系统默认看图软件打开结果：
+```bash
+python retouch.py grade photo.jpg -o graded.jpg --preset warm --show
+```
+（也可以用 `show` 打开原图或中间文件，便于与成品对比。）
+
 ### 自定义预设
 颜色分级预设存储在 `presets.md` 中（JSON 格式）。用户可以直接编辑该文件，添加新的预设条目，即可在 `grade` 命令中使用 `--preset 名称` 调用。例如添加：
 
@@ -196,8 +208,9 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
    使用 `list-presets` 查看可用预设，**先阅读每个预设的 `scene` 场景描述，与当前画面内容匹配后才可选用**，再对照 `styles.yml` 中命中类型的调色禁忌确认无误，然后执行 `grade`。可通过 `--strength` 控制效果强度。  
    若用户有自己的偏好，可编辑 `presets.md` 添加自定义预设。
 
-8. **输出与复查（必做，见【收尾自查清单】）**  
+8. **输出、复查与展示（必做，见【收尾自查清单】）**  
    调整完成后保存为高质量格式（如 16-bit TIFF），再次运行 `inspect` 并亲眼复查成品。
+   **向用户展示**：复查通过后，用 `show` 命令（或在最后一步输出命令上加 `--show`）用系统默认看图软件打开成品照片给用户看。
    可将用户喜好记录在 taste.md 中，并可将此次预设（若用户喜欢）记录在 presets.md 中以便复用。
 
 ---
@@ -226,7 +239,7 @@ python retouch.py grade photo.jpg -o vintage.jpg --preset vintage
 >    - 过度调整的痕迹：肤色是否蜡像、光效是否穿帮、饱和度是否溢出。
 > 2. **噪点检查**：若复查时发现噪点（暗部彩噪、高 ISO 颗粒），用 `denoise --strength 0.5~0.7` 处理后再复查一次。
 > 3. **合理裁切**：最后再审视一次构图，必要时用 `crop` 二次裁切。
-> 4. 全部通过后再交付，并按需把用户喜好写入 `taste.md`、把受欢迎的预设写入 `presets.md`。
+> 4. 全部通过后用 `show` 打开成品向用户展示，再交付；并按需把用户喜好写入 `taste.md`、把受欢迎的预设写入 `presets.md`。
 
 ### 修图准则
 
