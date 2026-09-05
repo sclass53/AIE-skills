@@ -224,18 +224,23 @@ def split_toning(img: np.ndarray, shadow_rgb: tuple, highlight_rgb: tuple,
         img[..., c] += offset * strength
     return img
 
-def load_presets_from_style_md(path: str = None) -> dict:
+def load_presets_from_presets_md(path: str = None) -> dict:
     """
-    从 style.md 文件加载预设（JSON 格式）。
-    查找顺序：传入路径 -> 环境变量 STYLE_MD_PATH -> 脚本同目录 -> 脚本上级目录 -> 当前工作目录。
+    从 presets.md 文件加载预设（JSON 格式）。
+    查找顺序：传入路径 -> 环境变量 PRESETS_MD_PATH -> 脚本同目录 -> 脚本上级目录 -> 当前工作目录。
+    （旧文件名 style.md 与旧环境变量 STYLE_MD_PATH 仍向后兼容。）
     """
     candidates = []
     if path is not None:
         candidates.append(path)
-    env_path = os.environ.get('STYLE_MD_PATH')
+    env_path = os.environ.get('PRESETS_MD_PATH') or os.environ.get('STYLE_MD_PATH')
     if env_path:
         candidates.append(env_path)
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(os.path.join(script_dir, 'presets.md'))
+    candidates.append(os.path.join(script_dir, '..', 'presets.md'))
+    candidates.append(os.path.join(os.getcwd(), 'presets.md'))
+    # 旧文件名，向后兼容
     candidates.append(os.path.join(script_dir, 'style.md'))
     candidates.append(os.path.join(script_dir, '..', 'style.md'))
     candidates.append(os.path.join(os.getcwd(), 'style.md'))
@@ -257,7 +262,7 @@ def load_presets_from_style_md(path: str = None) -> dict:
         presets = json.loads(content)
         return presets
     except Exception as e:
-        print(f"警告：无法读取或解析 style.md（{path}）: {e}", file=sys.stderr)
+        print(f"警告：无法读取或解析 presets.md（{path}）: {e}", file=sys.stderr)
         return {}
 
 def apply_grade_preset(img: np.ndarray, preset: str, strength: float = 0.8,
@@ -267,7 +272,7 @@ def apply_grade_preset(img: np.ndarray, preset: str, strength: float = 0.8,
     预设参数从 presets_dict 中获取（若未提供则使用默认内置预设）。
     """
     if presets_dict is None:
-        # 默认内置预设（与 style.md 保持一致）
+        # 默认内置预设（与 presets.md 保持一致）
         presets_dict = {
             'teal-orange': {
                 'shadow_rgb': (-0.06, 0.03, 0.06),
@@ -275,7 +280,7 @@ def apply_grade_preset(img: np.ndarray, preset: str, strength: float = 0.8,
                 'strength_default': 0.8,
                 'pre_saturation': None
             },
-            # ... 其他内置预设（可简化为从 style.md 读取，若 style.md 存在则覆盖）
+            # ... 其他内置预设（可简化为从 presets.md 读取，若 presets.md 存在则覆盖）
         }
 
     if preset not in presets_dict:
@@ -831,9 +836,9 @@ BUILTIN_PRESETS = {
 
 
 def get_all_presets() -> dict:
-    """内置预设 + style.md 中的自定义预设（同名时 style.md 优先）。"""
+    """内置预设 + presets.md 中的自定义预设（同名时 presets.md 优先）。"""
     presets = {k: dict(v) for k, v in BUILTIN_PRESETS.items()}
-    presets.update(load_presets_from_style_md())
+    presets.update(load_presets_from_presets_md())
     return presets
 
 
@@ -985,7 +990,7 @@ def main():
     p_grade.add_argument('input', help='输入图像路径')
     p_grade.add_argument('-o', '--output', required=True, help='输出图像路径')
     p_grade.add_argument('--preset', required=True,
-                         help='颜色分级预设（运行 list-presets 查看全部，含 style.md 自定义）')
+                         help='颜色分级预设（运行 list-presets 查看全部，含 presets.md 自定义）')
     p_grade.add_argument('--strength', type=float, default=0.8,
                          help='强度 0~1')
     p_grade.set_defaults(func=cmd_grade)
