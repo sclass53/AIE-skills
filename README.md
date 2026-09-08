@@ -4,7 +4,11 @@ Agent skills for photo editing, including exposure/ color grading/ presets/ cutt
 
 ## Taste
 
-The skill urges the agent to learn the user's taste, helping it adapt to the user's preferred aesthetics.
+The skill develops the agent's "taste" (based on users), helping it adapt to the user's preferred aesthetics. Also records a variety of presets, from Teal&Orange to Golden.
+
+## Instructions
+
+The skill already contains several instructions and sets of rules on **landscape**, **portrait**, **still life**, and **documentary** photography styles. The agent is also instructed to record the user's instructions.
 
 ## Tools
 
