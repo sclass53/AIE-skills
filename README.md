@@ -1,5 +1,7 @@
 # AIE-skills
 
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)]()
+
 Agent skills for photo editing, including exposure/ color grading/ presets/ cutting and many more.
 
 ## Taste
